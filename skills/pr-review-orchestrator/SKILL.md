@@ -43,13 +43,14 @@ If the change is large, summarize the shape of it (which subsystems, roughly how
 
 Spawn these as separate subagents **in the same turn** so they run concurrently. Each gets the shared context from Step 1 plus its specific mandate below. Scale the set to the PR: a three-line bugfix doesn't need all five — correctness + maybe docs is enough. A new module or a refactor warrants the full set. Use judgment; don't spawn a design-quality reviewer for a typo fix.
 
-The five mandates live in `references/`. Read the relevant one(s) when spawning:
+The mandates live in `references/`. Read the relevant one(s) when spawning:
 
 1. **Correctness & bugs** → `references/correctness.md`. Logic errors, edge cases, race conditions, error handling, security footguns, broken tests.
 2. **Simplification** → `references/simplification.md`. Dead code, over-engineering, redundant abstraction, things the standard library or an existing helper already does, ways to cut lines without losing clarity.
 3. **Docs & convention compliance** → `references/docs-compliance.md`. Does the change follow the project's documented conventions and architecture? Where it deviates, is the deviation justified somewhere (PR description, code comment, an ADR)? Unjustified, undocumented deviations are the finding.
 4. **Design quality** → `references/design-quality.md`. Coupling, cohesion, abstraction boundaries, SOLID, separation of concerns, and appropriate (not cargo-culted) use of design patterns.
 5. **Consistency & API surface** → `references/consistency.md`. Naming, error/return conventions, public-interface changes, backward compatibility. *(Optional — fold into design-quality for smaller PRs.)*
+6. **Existing PR comments** → `references/pr-comments.md`. Triages comments already on the PR — automated AI reviews (CodeRabbit, Copilot, etc.) and human threads — keeping unresolved, actionable items and dropping noise/stale/already-fixed. *(Only when reviewing a real PR with the platform CLI available; skip for local diffs.)*
 
 Give each subagent the same output contract: return a list of findings, each with **severity** (blocker / should-fix / nit), **location** (file:line), **what's wrong**, and **a concrete suggested fix or question**. Tell them to return *nothing* for a category rather than padding — an empty correctness report on clean code is a valid, useful result.
 
@@ -86,6 +87,9 @@ Use this structure:
 
 ### 📄 Convention compliance
 <does it match the docs? list any deviations and whether they're justified>
+
+### 💬 Existing PR comments
+<unresolved, actionable comments from bots/humans already on the PR, each with your call; omit this section for local diffs or when none survive triage>
 ```
 
 Keep findings concrete and actionable — `file:line — problem — suggested fix`, not vague principles. If everything's clean, say so plainly and don't manufacture concerns. A short honest review builds more trust than a long padded one.

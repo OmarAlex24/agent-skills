@@ -74,15 +74,17 @@ cat /tmp/delegate-result.txt                          # Codex's own summary of w
 
 Read Codex's summary, but **don't trust it as the review** — it's the implementer describing its own work. The diff is ground truth.
 
-### 5. Review the work — reuse the PR review skill
+### 5. Review and verify the work
 
 This is where this session earns its keep as the reviewer. Don't hand-wave the review. Invoke the **`pr-review-orchestrator`** skill on the diff produced in step 4, using the base ref from step 2 as the review base — it already knows how to fan out across correctness, simplification, docs-compliance, and design quality and synthesize a verdict.
 
 If `pr-review-orchestrator` isn't installed, fall back to a direct review of the diff against the original plan: did it do what the plan said, is it correct, does it follow the project's conventions, did it over-build? But prefer the dedicated skill.
 
+Reading the diff isn't enough — **run the project's own checks** on what Codex produced, narrowest first and widening with the blast radius: tests for the touched code, then typecheck/lint, then build, then broader suites or a smoke test if the change is large or risky. Codex's summary may claim it verified; confirm it yourself, since code that doesn't compile or fails tests must never reach Accept. Report which checks you ran and which you skipped and why — don't let a skipped suite masquerade as a pass.
+
 ### 6. Decide and iterate
 
-Based on the review, choose with the user:
+Based on the review, choose with the user. Before any **risky or irreversible finalization** — committing, pushing, force-pushing, running migrations or codemods, deploying/publishing, or anything touching secrets, billing, production data, or user accounts — stop and get explicit approval first; the iterate loop must never perform destructive or external actions unattended.
 - **Accept** — the work is good; commit it (or let the user do so).
 - **Request changes** — feed the review findings back to the same Codex session so it fixes its own work, preserving its context:
   ```bash
@@ -94,6 +96,12 @@ Based on the review, choose with the user:
 ## Staying agent-agnostic
 
 The loop — plan, capture base, delegate non-interactively, diff, review, iterate — is independent of which external agent implements. Codex is just the first target: any agent with a non-interactive "run a prompt to completion" mode that edits the tree in place works, changing only the command and its flags while the surrounding logic stays identical.
+
+## Delegating multiple slices in parallel
+
+`codex exec` blocks, but you can run several at once (in the background, or via the helper) when a task splits into **disjoint file scopes** — e.g. one agent on `src/api/`, another on `src/db/`. Only do this when the slices genuinely don't overlap; concurrent agents editing the same files will clobber each other.
+
+When you fan out, tell each agent in its prompt that **it is not alone in the codebase**: it must stay strictly within its assigned files, must not revert or "fix" changes outside its scope, and must adapt to files that may shift underneath it from a sibling agent. Capture one base ref before launching any of them, then review the combined diff once they all return. If the slices can't be made disjoint, delegate them sequentially instead.
 
 ## Common failure modes
 

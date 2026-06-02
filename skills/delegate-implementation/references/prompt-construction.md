@@ -8,7 +8,7 @@ The external agent starts with **none** of this conversation's context. It doesn
 
 **The concrete steps.** The agreed plan, as an ordered list of what to do. Specific enough to act on — name the files, functions, endpoints, data structures. "Add validation" is weak; "add a `validateOrder` function in `src/orders/validate.ts` that rejects orders with empty line items or negative totals" is actionable.
 
-**Scope — in and out.** Which files/modules/areas the agent should touch, and explicitly what it should *not*. External agents left unscoped tend to sprawl: refactoring adjacent code, "improving" things you didn't ask about, touching unrelated files. State the boundary. "Only modify files under `src/payments/`; do not change the public API in `src/api/`."
+**Scope — in and out.** Which files/modules/areas the agent should touch, and explicitly what it should *not*. External agents left unscoped tend to sprawl: refactoring adjacent code, "improving" things you didn't ask about, touching unrelated files. State the boundary. "Only modify files under `src/payments/`; do not change the public API in `src/api/`." If this delegation runs alongside others on the same repo, say so explicitly: the agent is not alone, must stay inside its files, and must not revert or touch another agent's work.
 
 **Conventions to follow.** Point the agent at the project's own rules so the output matches the codebase. If there's an `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, or a `docs/` directory, tell the agent to read and follow them — Codex reads `AGENTS.md` natively, but naming it in the prompt reinforces it. Call out specifics that matter for this change: error-handling style, logging approach, how to structure tests, naming conventions.
 

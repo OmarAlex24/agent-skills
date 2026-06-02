@@ -58,6 +58,7 @@ Give each subagent the same output contract: return a list of findings, each wit
 
 When the subagents return, merge their findings into one report. This is real work, not concatenation:
 
+- **Stress-test before reporting.** Don't relay findings on trust — challenge each blocker and should-fix first. Does the bug actually trigger on some real input, or is it theoretical? Does the flagged "violation" cost anything *in this codebase*? For high-stakes or contested findings, spawn one more independent agent whose only job is to *disprove* them. A finding that survives a genuine attempt to refute it is trustworthy; one that doesn't gets downgraded to a nit/question or dropped. This is what keeps the report precise instead of noisy.
 - **Deduplicate.** The simplification and design-quality passes will often flag the same tangled function from different angles. Merge into one finding that names both concerns.
 - **Resolve conflicts.** Reviewers will sometimes disagree — one wants an abstraction extracted, another flags it as premature. Surface the tension and give your own call as the coordinator, with reasoning. Don't just list both and walk away.
 - **Prioritize by severity, then by effort.** Blockers first. Within a tier, lead with high-impact / low-effort fixes.

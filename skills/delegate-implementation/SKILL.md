@@ -7,7 +7,7 @@ description: After a plan is agreed on, delegate the actual implementation to an
 
 This skill runs a three-role loop where **this session is the architect and reviewer, and an external agent (Codex) is the implementer**. You plan, Codex builds, you review. The point is to keep planning and reviewing — the judgment-heavy parts — in this session, while offloading the mechanical implementation to a separate agent that works in its own context.
 
-The whole thing rests on one fact that makes it robust rather than fragile: **`codex exec` is synchronous.** It runs a single session to completion and exits when the task is done. There is no watcher, no polling, no "wake up when it's finished" — you run the command, it blocks, and when control returns to you the work is done and sitting in the working tree. Build the skill around that and it stays simple.
+This works because **`codex exec` is synchronous**: you run it, it blocks until the task is done, and control returns only once the work is sitting in the working tree — no watcher, no polling.
 
 ## Prerequisites — check before delegating
 
@@ -76,7 +76,7 @@ Read Codex's summary, but **don't trust it as the review** — it's the implemen
 
 ### 5. Review the work — reuse the PR review skill
 
-This is where this session earns its keep as the reviewer. Don't hand-wave the review. Invoke the **`pr-review-orchestrator`** skill on the diff produced in step 4 — it already knows how to fan out across correctness, simplification, docs-compliance, and design quality, and synthesize a verdict. Treat the base ref from step 2 as the review base. The handoff is natural: that skill is built to review "a diff/branch versus a base," which is exactly what you have.
+This is where this session earns its keep as the reviewer. Don't hand-wave the review. Invoke the **`pr-review-orchestrator`** skill on the diff produced in step 4, using the base ref from step 2 as the review base — it already knows how to fan out across correctness, simplification, docs-compliance, and design quality and synthesize a verdict.
 
 If `pr-review-orchestrator` isn't installed, fall back to a direct review of the diff against the original plan: did it do what the plan said, is it correct, does it follow the project's conventions, did it over-build? But prefer the dedicated skill.
 
@@ -93,7 +93,7 @@ Based on the review, choose with the user:
 
 ## Staying agent-agnostic
 
-The loop — plan, capture base, delegate non-interactively, diff, review, iterate — is independent of which external agent implements. Codex is the first target, but the same shape works with any agent that has a non-interactive "run a prompt to completion" mode and edits the working tree in place. If you later wire in another, the only things that change are the command and its flags; the surrounding logic (git base capture, diff, review via `pr-review-orchestrator`) stays identical. Keep that separation in mind so the skill doesn't get welded to one vendor.
+The loop — plan, capture base, delegate non-interactively, diff, review, iterate — is independent of which external agent implements. Codex is just the first target: any agent with a non-interactive "run a prompt to completion" mode that edits the tree in place works, changing only the command and its flags while the surrounding logic stays identical.
 
 ## Common failure modes
 
@@ -101,4 +101,3 @@ The loop — plan, capture base, delegate non-interactively, diff, review, itera
 - **Codex edits the wrong repo**: missing or wrong `--cd`. Always pin it.
 - **Review blames Codex for pre-existing changes**: tree was dirty before delegating and you diffed against the wrong base. Capture the base ref first; delegate from a clean tree when you can.
 - **Vague plan, sprawling diff**: the prompt didn't scope the work. Tighten the plan before re-running, don't try to salvage a bad run by reviewing harder.
-- **Trusting the summary over the diff**: always review the actual changes, not Codex's description of them.

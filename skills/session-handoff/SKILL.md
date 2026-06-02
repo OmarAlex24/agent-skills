@@ -23,7 +23,7 @@ Tell the user the full path after writing it.
 
 ## Keep it agnostic
 
-Write nothing tied to a specific model, vendor, or agent tool. No model names, no product names for the agent runtime, no assumptions about which environment reads this next. Refer to "the next session" or "whoever resumes this," not to any named assistant. The file should read the same whether the next agent is this one or a completely different system. (Project tools, frameworks, and services that are *part of the work itself* — the codebase's stack — are fine and expected; the rule is only about not hard-coding the *agent* that does the reading.)
+Write nothing tied to a specific model, vendor, or agent tool — refer to "the next session" or "whoever resumes this," never a named assistant, so the file reads the same whatever system picks it up. The project's own stack (tools, frameworks, services that are part of the work) is fine and expected; the rule is only about not hard-coding the *agent* that does the reading.
 
 ## Document structure
 
@@ -56,6 +56,6 @@ The background, placed last as reference. What the user originally asked for, ke
 
 Read back over the conversation before writing — don't reconstruct from memory of just the last few exchanges, since the important errors and decisions are often buried in the middle. See `references/extraction-guide.md` for what to look for in each section and the common mistakes that make handoffs useless.
 
-Match the length to the work. A handoff for an afternoon's task is one screen; a handoff for a multi-day effort with many dead ends is longer. Don't pad sparse sections to look complete — if no meaningful errors came up, "No significant errors encountered" is a fine and honest entry. Empty-but-honest beats invented-but-full.
+Match the length to the work. A handoff for an afternoon's task is one screen; a handoff for a multi-day effort with many dead ends is longer. Don't pad sparse sections to look complete — if no meaningful errors came up, "No significant errors encountered" is a fine and honest entry.
 
 Write in plain prose and tight bullets. Skip ceremony. The reader is an agent trying to get to work, not a stakeholder reading a report.

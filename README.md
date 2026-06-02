@@ -1,75 +1,126 @@
 # agent-skills
 
-Mis [agent skills](https://agentskills.io) versionadas y listas para instalar con el
-CLI de Vercel ([`npx skills`](https://github.com/vercel-labs/skills)). El versionado
-se lleva con git: cada commit/tag del repo es la unidad de release.
+My versioned [agent skills](https://agentskills.io), built to work together as a
+**plan → build → review → hand off** loop for coding work. Each skill is a focused
+instruction set your agent loads on demand; this README is about *what they do and
+when to reach for them*. Installation is at the [bottom](#installing).
 
-## Skills
+## The skills
 
-| Skill | Que hace |
-|---|---|
-| [`session-handoff`](skills/session-handoff) | Escribe un handoff estructurado para que una sesion nueva retome el trabajo sin releer toda la conversacion. |
-| [`delegate-implementation`](skills/delegate-implementation) | Delega la implementacion de un plan a un agente externo (Codex) en modo no-interactivo y luego revisa el resultado. |
-| [`pr-review-orchestrator`](skills/pr-review-orchestrator) | Coordina una revision de codigo multi-agente (correctness, simplificacion, convenciones, diseno) y sintetiza un veredicto. |
+### `session-handoff`
 
-Forman un ciclo coherente: **planear -> `delegate-implementation` -> `pr-review-orchestrator` -> `session-handoff`**.
+Writes a structured handoff document so a fresh agent session (or a teammate) can
+resume work without re-reading the whole conversation. It front-loads *current state*
+and *next steps*, then records errors/dead-ends, decisions, files touched, and the
+original context as reference.
 
-## Instalar
+**Reach for it when:**
+- A conversation has grown long and context is filling up.
+- You're pausing work for the day and want a clean restart later.
+- You're switching agents/tools and need the state captured agent-agnostically.
+- You say things like "save progress", "hacer un handoff", "document where we are".
 
-Reemplaza `<owner>` por tu usuario/org de GitHub una vez publicado el repo.
+**Why it helps:** the next session reads one file and *resumes* competently, instead
+of reconstructing the state from a transcript. Dead ends are recorded so nobody walks
+into them twice.
+
+### `delegate-implementation`
+
+After a plan is agreed on, hands the actual implementation to an external coding-agent
+CLI (Codex) running non-interactively, waits for it to finish, then reviews the diff it
+produced. Your session stays the **architect + reviewer**; the external agent is the
+**implementer**.
+
+**Reach for it when:**
+- You've finished planning and want the code built by a separate agent in its own context.
+- You want to keep the judgment-heavy parts (planning, review) in this session and
+  offload the mechanical typing.
+- You say "delegate this to codex", "pásale esto a codex", "let another agent build it".
+
+**Why it helps:** `codex exec` is synchronous — it runs to completion and the changes
+land in your working tree. The skill captures a git base ref first so the review can
+isolate exactly what the external agent changed, then reviews against the original plan.
+
+> Requires `codex` installed and authenticated, inside a git repo.
+
+### `pr-review-orchestrator`
+
+Coordinates a multi-agent code review of a PR, branch, or diff. It spawns specialized
+review passes in parallel — correctness/bugs, simplification, docs & convention
+compliance, design quality, consistency/API surface — then synthesizes them into one
+prioritized verdict (blockers / should-fix / nits).
+
+**Reach for it when:**
+- You're about to merge and want a thorough pre-merge check.
+- You want deeper review than a single pass — separate mandates keep each pass deep.
+- You say "review this PR", "revisa este PR", "check my changes before I merge".
+
+**Why it helps:** a reviewer hunting null-pointer bugs is in a different headspace than
+one judging coupling; fanning out and merging the results catches more than one
+generalist pass. It also flags *unjustified* deviations from your project's docs, not
+just any deviation.
+
+## How they fit together
+
+```
+        plan (this session)
+              │
+              ▼
+   delegate-implementation ──► external agent writes the code
+              │
+              ▼
+   pr-review-orchestrator ───► reviews the resulting diff
+              │
+              ▼
+       session-handoff ──────► checkpoint state for the next session
+```
+
+`delegate-implementation` calls `pr-review-orchestrator` for its review step, and any
+of them can be used standalone — you don't need the whole loop to get value from one.
+
+## Example scenarios
+
+- **Long feature session running out of context** → run `session-handoff`, start a
+  fresh session, keep going from the handoff file.
+- **Plan approved, want it built fast** → `delegate-implementation` hands it to Codex,
+  then auto-reviews the diff with `pr-review-orchestrator`; you accept or request changes.
+- **Reviewing a teammate's PR before merge** → `pr-review-orchestrator` gives you a
+  verdict with blockers separated from nits and design notes.
+- **Wrapping up for the day mid-refactor** → `session-handoff` records what's done,
+  what's half-wired, and the dead ends you already ruled out.
+
+## Installing
+
+Skills are installed with the Vercel [`npx skills`](https://github.com/vercel-labs/skills)
+CLI. Versioning is tracked via git — each commit/tag of this repo is a release.
 
 ```bash
-# Todas las skills
-npx skills add <owner>/agent-skills
+# All skills
+npx skills add OmarAlex24/agent-skills
 
-# Una sola skill
-npx skills add <owner>/agent-skills --skill session-handoff
+# A single skill
+npx skills add OmarAlex24/agent-skills --skill session-handoff
 
-# Listar lo que hay sin instalar
-npx skills add <owner>/agent-skills --list
+# List without installing
+npx skills add OmarAlex24/agent-skills --list
 
-# Instalacion global (en vez de por proyecto)
-npx skills add <owner>/agent-skills -g
+# Global instead of per-project
+npx skills add OmarAlex24/agent-skills -g
+
+# Update later
+npx skills update
 ```
 
-### Dev local (sin publicar)
-
-```bash
-# Desde la raiz del repo
-npx skills add . --list
-npx skills add . --skill pr-review-orchestrator
-```
-
-### Actualizar
-
-```bash
-npx skills update            # todas
-npx skills update session-handoff
-```
-
-## Estructura
+## Repo layout
 
 ```
-skills/<nombre>/
-├── SKILL.md          # requerido: frontmatter (name, description) + instrucciones
-├── references/       # opcional: detalle que se carga bajo demanda
-└── scripts/          # opcional: codigo ejecutable
+skills/<name>/
+├── SKILL.md          # required: frontmatter (name, description) + instructions
+├── references/       # optional: detail loaded on demand
+└── scripts/          # optional: executable code
 ```
 
-`npx skills` descubre cualquier `skills/<nombre>/SKILL.md`. El `name` del frontmatter
-debe coincidir con el nombre de la carpeta.
-
-## Anadir una skill nueva
-
-```bash
-npx skills init skills/<nombre>     # crea el SKILL.md plantilla
-bash scripts/validate.sh            # valida frontmatter y naming
-```
-
-Guia de formato: https://agentskills.io/specification
-
-## Validacion
-
-`scripts/validate.sh` verifica que cada `SKILL.md` tenga `name` y `description` y que
-el `name` coincida con su carpeta. Se corre en CI en cada push/PR
-(`.github/workflows/validate.yml`).
+`npx skills` discovers any `skills/<name>/SKILL.md`; the frontmatter `name` must match
+the folder name. `scripts/validate.sh` enforces this and runs in CI on every push/PR.
+To add a new skill: `npx skills init skills/<name>`, then follow the
+[spec](https://agentskills.io/specification).

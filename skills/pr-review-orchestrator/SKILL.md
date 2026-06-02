@@ -17,11 +17,13 @@ Figure out what's being reviewed and act accordingly:
 - **A remote or named PR.** Bring its code onto disk **without disturbing the user's working tree**:
   1. Run `git status` first. If there are uncommitted or untracked changes, do **not** checkout over them — a worktree (below) sidesteps this entirely, so prefer it.
   2. Create a throwaway worktree at the PR head so the user's checkout is untouched:
-     - With GitHub CLI: ``git worktree add ../review-pr-<n> && (cd ../review-pr-<n> && gh pr checkout <n>)``, or simply `gh pr checkout <n>` if the user explicitly accepts switching their current checkout.
-     - Without `gh`: `git fetch origin pull/<n>/head:pr-<n>` (GitHub) / the platform's equivalent refspec, then `git worktree add ../review-pr-<n> pr-<n>`.
+     - With GitHub CLI (**preferred** — it checks out the PR's real head branch with tracking, so fixes can be pushed back): `gh repo set-default` if needed, then ``git worktree add ../review-pr-<n> && (cd ../review-pr-<n> && gh pr checkout <n>)``, or simply `gh pr checkout <n>` if the user explicitly accepts switching their current checkout.
+     - Without `gh`: `git fetch origin pull/<n>/head:pr-<n>` (GitHub) / the platform's equivalent refspec, then `git worktree add ../review-pr-<n> pr-<n>`. **This is read-only** — `pull/<n>/head` is not a pushable branch, so use it only when you won't push fixes back. To push back, get the PR's actual head branch name (`gh pr view <n> --json headRefName`) and check that out instead.
   3. **Record the base and head SHAs** (`git rev-parse <base> <head>`) so every reviewer pins to the exact same snapshot.
   4. **Note the worktree path.** Every subagent must read files from there, not from the user's original checkout.
 - **No network / can't fetch the PR.** Degrade gracefully: review whatever diff or branch is already available locally, and say in the report that you reviewed the local state rather than the canonical PR head.
+
+**If you push fixes back.** This skill reviews; it doesn't fix. But if the user then asks you to apply and push the fixes, push them to the **PR's own head branch** so they show up on the PR — **never invent a new branch and never push to the `review-pr-<n>` worktree name or a read-only `pull/<n>/head` ref.** Confirm the target with `gh pr view <n> --json headRefName` and push there. If your worktree was set up via `gh pr checkout`, it already tracks that branch, so a plain `git push` lands on the PR. If you used the read-only fetch path, switch to the real head branch first (see step 2).
 
 **Cleanup.** A worktree you created is temporary. After the review is delivered (Step 3), remove it: `git worktree remove ../review-pr-<n>` (and delete the fetched `pr-<n>` ref if you made one). If anything is uncommitted in it, leave it and tell the user where it is instead of force-removing.
 

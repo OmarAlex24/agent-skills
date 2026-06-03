@@ -25,6 +25,8 @@ Figure out what's being reviewed and act accordingly:
 
 **If you push fixes back.** This skill reviews; it doesn't fix. But if the user then asks you to apply and push the fixes, push them to the **PR's own head branch** so they show up on the PR — **never invent a new branch and never push to the `review-pr-<n>` worktree name or a read-only `pull/<n>/head` ref.** Confirm the target with `gh pr view <n> --json headRefName` and push there. If your worktree was set up via `gh pr checkout`, it already tracks that branch, so a plain `git push` lands on the PR. If you used the read-only fetch path, switch to the real head branch first (see step 2).
 
+**After pushing fixes, resolve addressed review threads.** If the review surfaced inline comments or requested changes that you have now fully addressed, mark those PR review threads as **resolved** so the remaining open feedback is accurate. Use the GitHub GraphQL API via `gh api graphql` (`resolveReviewThread` mutation). Read the detailed commands and safety rules in `references/post-fix-resolution.md` before proceeding. Only resolve threads you are confident are completely addressed; leave anything partial or contested open and note why.
+
 **Cleanup.** A worktree you created is temporary. After the review is delivered (Step 3), remove it: `git worktree remove ../review-pr-<n>` (and delete the fetched `pr-<n>` ref if you made one). If anything is uncommitted in it, leave it and tell the user where it is instead of force-removing.
 
 ## Step 1 — Gather context once

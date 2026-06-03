@@ -60,6 +60,22 @@ one judging coupling; fanning out and merging the results catches more than one
 generalist pass. It also flags *unjustified* deviations from your project's docs, not
 just any deviation.
 
+### `web-performance`
+
+Diagnoses and fixes performance problems in web and desktop apps. Covers load
+performance, rendering bottlenecks, data & network latency, animation jank, and desktop
+shell profiling — all measurement-first and stack-agnostic.
+
+**Reach for it when:**
+- The app feels slow, janky, or laggy — on scroll, typing, navigation, or first load.
+- You're fighting large bundles, excessive re-renders, or slow list/chat rendering.
+- You say "why is my app slow", "how do I make X fast", or need profiling setup.
+
+**Why it helps:** it replaces guess-and-check with a diagnostic loop: characterize the
+symptom, measure with the right profiler, apply the highest-leverage fix, then
+re-measure. The references cover everything from `modulepreload` and code splitting to
+virtualization, optimistic updates, and the Tauri profiling bridge shim.
+
 ## How they fit together
 
 ```
@@ -88,6 +104,9 @@ of them can be used standalone — you don't need the whole loop to get value fr
   verdict with blockers separated from nits and design notes.
 - **Wrapping up for the day mid-refactor** → `session-handoff` records what's done,
   what's half-wired, and the dead ends you already ruled out.
+- **App feels janky or loads too slowly** → `web-performance` profiles the symptom,
+  identifies the bottleneck (re-renders, bundle size, missing virtualization), and
+  applies the fix with before/after measurements.
 
 ## Installing
 
